@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>岩心管理 - 海底地质岩心图文分析系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
+        .header { background: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { color: #333; font-size: 24px; }
+        .nav { display: flex; gap: 20px; margin-top: 10px; }
+        .nav a { text-decoration: none; color: #666; padding: 8px 16px; border-radius: 20px; transition: all 0.3s; }
+        .nav a:hover { background: #667eea; color: white; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-bar input, .search-bar select, .search-bar button { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .search-bar button { background: #667eea; color: white; cursor: pointer; border: none; }
+        .search-bar button:hover { background: #5a6fd6; }
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; color: #333; }
+        tr:hover { background: #f8f9fa; }
+        .btn { padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 14px; margin-right: 5px; }
+        .btn-edit { background: #4CAF50; color: white; }
+        .btn-delete { background: #f44336; color: white; }
+        .btn-add { background: #667eea; color: white; padding: 10px 20px; float: right; margin-bottom: 15px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; }
+        .modal-content h2 { margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-buttons button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .modal-buttons .btn-submit { background: #667eea; color: white; }
+        .modal-buttons .btn-cancel { background: #ddd; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌊 岩心管理</h1>
+        <div class="nav">
+            <a href="/">首页</a>
+            <a href="/core-samples">岩心管理</a>
+            <a href="/analysis">数据分析</a>
+            <a href="/reports">分析报告</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <a href="#" class="btn btn-add" onclick="openModal()">添加岩心</a>
+        
+        <div class="search-bar">
+            <input type="text" id="searchSampleNo" placeholder="岩心编号">
+            <input type="text" id="searchBasin" placeholder="盆地名称">
+            <input type="text" id="searchLithology" placeholder="岩性">
+            <input type="number" id="searchMinDepth" placeholder="最小深度">
+            <input type="number" id="searchMaxDepth" placeholder="最大深度">
+            <button onclick="searchCoreSamples()">搜索</button>
+            <button onclick="resetSearch()">重置</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="coreSampleTable">
+                <thead>
+                    <tr>
+                        <th>岩心编号</th>
+                        <th>盆地名称</th>
+                        <th>采样位置</th>
+                        <th>深度(m)</th>
+                        <th>地层</th>
+                        <th>岩性</th>
+                        <th>颜色</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">添加岩心</h2>
+            <form id="coreSampleForm">
+                <input type="hidden" id="formId">
+                <div class="form-group">
+                    <label>岩心编号 *</label>
+                    <input type="text" id="formSampleNo" required>
+                </div>
+                <div class="form-group">
+                    <label>盆地名称</label>
+                    <input type="text" id="formBasinName">
+                </div>
+                <div class="form-group">
+                    <label>采样位置</label>
+                    <input type="text" id="formLocation">
+                </div>
+                <div class="form-group">
+                    <label>起始深度(m)</label>
+                    <input type="number" step="0.01" id="formDepthFrom">
+                </div>
+                <div class="form-group">
+                    <label>终止深度(m)</label>
+                    <input type="number" step="0.01" id="formDepthTo">
+                </div>
+                <div class="form-group">
+                    <label>地层名称</label>
+                    <input type="text" id="formFormation">
+                </div>
+                <div class="form-group">
+                    <label>岩性</label>
+                    <input type="text" id="formLithology">
+                </div>
+                <div class="form-group">
+                    <label>颜色</label>
+                    <input type="text" id="formColor">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="formDescription" rows="3"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-submit">保存</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/core-samples';
+
+        function loadCoreSamples() {
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.querySelector('#coreSampleTable tbody');
+                    tbody.innerHTML = data.map(item => `
+                        <tr>
+                            <td>${item.sampleNo}</td>
+                            <td>${item.basinName || '-'}</td>
+                            <td>${item.location || '-'}</td>
+                            <td>${item.depthFrom || 0} - ${item.depthTo || 0}</td>
+                            <td>${item.formation || '-'}</td>
+                            <td>${item.lithology || '-'}</td>
+                            <td>${item.color || '-'}</td>
+                            <td>
+                                <a href="#" class="btn btn-edit" onclick="editCoreSample(${item.id})">编辑</a>
+                                <a href="#" class="btn btn-delete" onclick="deleteCoreSample(${item.id})">删除</a>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
+
+        function openModal() {
+            document.getElementById('modalTitle').textContent = '添加岩心';
+            document.getElementById('coreSampleForm').reset();
+            document.getElementById('formId').value = '';
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function editCoreSample(id) {
+            fetch(`${API_URL}/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('modalTitle').textContent = '编辑岩心';
+                    document.getElementById('formId').value = data.id;
+                    document.getElementById('formSampleNo').value = data.sampleNo;
+                    document.getElementById('formBasinName').value = data.basinName || '';
+                    document.getElementById('formLocation').value = data.location || '';
+                    document.getElementById('formDepthFrom').value = data.depthFrom || '';
+                    document.getElementById('formDepthTo').value = data.depthTo || '';
+                    document.getElementById('formFormation').value = data.formation || '';
+                    document.getElementById('formLithology').value = data.lithology || '';
+                    document.getElementById('formColor').value = data.color || '';
+                    document.getElementById('formDescription').value = data.description || '';
+                    document.getElementById('modal').style.display = 'flex';
+                });
+        }
+
+        function deleteCoreSample(id) {
+            if (confirm('确定要删除该岩心吗？')) {
+                fetch(`${API_URL}/${id}`, { method: 'DELETE' })
+                    .then(() => loadCoreSamples());
+            }
+        }
+
+        document.getElementById('coreSampleForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('formId').value;
+            const data = {
+                sampleNo: document.getElementById('formSampleNo').value,
+                basinName: document.getElementById('formBasinName').value || null,
+                location: document.getElementById('formLocation').value || null,
+                depthFrom: parseFloat(document.getElementById('formDepthFrom').value) || null,
+                depthTo: parseFloat(document.getElementById('formDepthTo').value) || null,
+                formation: document.getElementById('formFormation').value || null,
+                lithology: document.getElementById('formLithology').value || null,
+                color: document.getElementById('formColor').value || null,
+                description: document.getElementById('formDescription').value || null
+            };
+            
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/${id}` : API_URL;
+            
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(() => {
+                closeModal();
+                loadCoreSamples();
+            });
+        });
+
+        function searchCoreSamples() {
+            const params = new URLSearchParams();
+            const sampleNo = document.getElementById('searchSampleNo').value;
+            const basin = document.getElementById('searchBasin').value;
+            const lithology = document.getElementById('searchLithology').value;
+            const minDepth = document.getElementById('searchMinDepth').value;
+            const maxDepth = document.getElementById('searchMaxDepth').value;
+            
+            if (basin) params.append('basinName', basin);
+            if (lithology) params.append('lithology', lithology);
+            if (minDepth && maxDepth) {
+                fetch(`${API_URL}/search/depth?minDepth=${minDepth}&maxDepth=${maxDepth}`)
+                    .then(res => res.json())
+                    .then(displayResults);
+                return;
+            }
+            if (basin) {
+                fetch(`${API_URL}/search/basin?basinName=${basin}`)
+                    .then(res => res.json())
+                    .then(displayResults);
+                return;
+            }
+            if (lithology) {
+                fetch(`${API_URL}/search/lithology?lithology=${lithology}`)
+                    .then(res => res.json())
+                    .then(displayResults);
+                return;
+            }
+            loadCoreSamples();
+        }
+
+        function displayResults(data) {
+            const tbody = document.querySelector('#coreSampleTable tbody');
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.sampleNo}</td>
+                    <td>${item.basinName || '-'}</td>
+                    <td>${item.location || '-'}</td>
+                    <td>${item.depthFrom || 0} - ${item.depthTo || 0}</td>
+                    <td>${item.formation || '-'}</td>
+                    <td>${item.lithology || '-'}</td>
+                    <td>${item.color || '-'}</td>
+                    <td>
+                        <a href="#" class="btn btn-edit" onclick="editCoreSample(${item.id})">编辑</a>
+                        <a href="#" class="btn btn-delete" onclick="deleteCoreSample(${item.id})">删除</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function resetSearch() {
+            document.getElementById('searchSampleNo').value = '';
+            document.getElementById('searchBasin').value = '';
+            document.getElementById('searchLithology').value = '';
+            document.getElementById('searchMinDepth').value = '';
+            document.getElementById('searchMaxDepth').value = '';
+            loadCoreSamples();
+        }
+
+        window.onclick = (e) => {
+            if (e.target === document.getElementById('modal')) closeModal();
+        }
+
+        loadCoreSamples();
+    </script>
+</body>
+</html>
