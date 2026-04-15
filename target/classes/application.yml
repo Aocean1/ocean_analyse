@@ -14,8 +14,8 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+        "[format_sql]": true
+        "[dialect]": org.hibernate.dialect.MySQLDialect
   
   thymeleaf:
     prefix: classpath:/templates/
@@ -31,5 +31,5 @@ spring:
 
 logging:
   level:
-    com.example.oceananalyse: DEBUG
-    org.hibernate.SQL: DEBUG
+    "[com.example.oceananalyse]": DEBUG
+    "[org.hibernate.SQL]": DEBUG
