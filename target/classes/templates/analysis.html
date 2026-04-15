@@ -54,7 +54,7 @@
             <button class="tab" onclick="showTab('fracture')">裂缝分析</button>
         </div>
         
-        <div id="holePanel" class="panel">
+        <div id="hole" class="panel" name="holePanel">
             <h2>孔洞分析</h2>
             <div class="info-card" id="holeInfo" style="display:none;">已有分析数据，可修改</div>
             <form id="holeForm">
@@ -101,7 +101,7 @@
             </form>
         </div>
         
-        <div id="grainPanel" class="panel" style="display:none;">
+        <div id="grain" class="panel" name="grainPanel" style="display:none;">
             <h2>粒度分析</h2>
             <div class="info-card" id="grainInfo" style="display:none;">已有分析数据，可修改</div>
             <form id="grainForm">
@@ -152,7 +152,7 @@
             </form>
         </div>
         
-        <div id="fracturePanel" class="panel" style="display:none;">
+        <div id="fracture" class="panel" name="fracturePanel" style="display:none;">
             <h2>裂缝分析</h2>
             <div class="info-card" id="fractureInfo" style="display:none;">已有分析数据，可修改</div>
             <form id="fractureForm">
@@ -218,8 +218,15 @@
             document.querySelector(`.tab:nth-child(${tabName === 'hole' ? 1 : tabName === 'grain' ? 2 : 3})`).classList.add('active');
             
             document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
-            document.getElementById(`${tabName}Panel`).style.display = 'block';
+            document.getElementById(tabName).style.display = 'block';
         }
+        
+        window.onload = function() {
+            const hash = window.location.hash.slice(1);
+            if (hash === 'hole' || hash === 'grain' || hash === 'fracture') {
+                showTab(hash);
+            }
+        };
 
         function loadAnalysisData() {
             const coreId = document.getElementById('coreSampleSelect').value;
