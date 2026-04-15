@@ -62,4 +62,14 @@ public class CoreSampleController {
     public List<CoreSample> searchByDepthRange(@RequestParam Double minDepth, @RequestParam Double maxDepth) {
         return coreSampleService.searchByDepthRange(minDepth, maxDepth);
     }
+    
+    @GetMapping("/search")
+    public List<CoreSample> searchCoreSamples(
+        @RequestParam(required = false) String sampleNo,
+        @RequestParam(required = false) String basinName,
+        @RequestParam(required = false) String lithology,
+        @RequestParam(required = false) Double minDepth,
+        @RequestParam(required = false) Double maxDepth) {
+        return coreSampleService.searchByConditions(sampleNo, basinName, lithology, minDepth, maxDepth);
+    }
 }

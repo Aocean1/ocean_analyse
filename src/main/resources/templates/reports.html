@@ -75,26 +75,78 @@
     </div>
 
     <script>
+        function showMessage(type, message) {
+            const colors = {
+                success: '#4CAF50',
+                error: '#e74c3c',
+                info: '#3498db',
+                warning: '#f39c12'
+            };
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                warning: '⚠️'
+            };
+            
+            let msgDiv = document.getElementById('globalMessage');
+            if (!msgDiv) {
+                msgDiv = document.createElement('div');
+                msgDiv.id = 'globalMessage';
+                msgDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: bold;
+                    z-index: 1000;
+                    box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+                    transform: translateX(120%);
+                    transition: transform 0.3s ease;
+                `;
+                document.body.appendChild(msgDiv);
+            }
+            
+            msgDiv.style.backgroundColor = colors[type];
+            msgDiv.innerHTML = `${icons[type]} ${message}`;
+            msgDiv.style.transform = 'translateX(0)';
+            
+            setTimeout(() => {
+                msgDiv.style.transform = 'translateX(120%)';
+            }, 3000);
+        }
+
         function loadReports() {
+            const tbody = document.querySelector('#reportTable tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#666;">正在加载报告...</td></tr>';
+            
             fetch('/api/reports')
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP错误: ${res.status}`);
+                    return res.json();
+                })
                 .then(data => {
-                    const tbody = document.querySelector('#reportTable tbody');
-                    if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="no-data">暂无报告数据</td></tr>';
-                        return;
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="no-data">📭 暂无分析报告，请先在数据分析页面生成报告</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.map(item => `
+                            <tr>
+                                <td>${item.reportTitle}</td>
+                                <td>${item.coreSample?.sampleNo || '-'}</td>
+                                <td>${formatDate(item.generatedAt)}</td>
+                                <td>
+                                    <a href="#" class="btn btn-view" onclick="viewReport(${item.id})">查看</a>
+                                    <a href="#" class="btn btn-delete" onclick="deleteReport(${item.id})">删除</a>
+                                </td>
+                            </tr>
+                        `).join('');
                     }
-                    tbody.innerHTML = data.map(item => `
-                        <tr>
-                            <td>${item.reportTitle}</td>
-                            <td>${item.coreSample?.sampleNo || '-'}</td>
-                            <td>${formatDate(item.generatedAt)}</td>
-                            <td>
-                                <a href="#" class="btn btn-view" onclick="viewReport(${item.id})">查看</a>
-                                <a href="#" class="btn btn-delete" onclick="deleteReport(${item.id})">删除</a>
-                            </td>
-                        </tr>
-                    `).join('');
+                })
+                .catch(err => {
+                    console.error('加载报告失败:', err);
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#e74c3c;">❌ 加载报告失败: ${err.message}</td></tr>`;
                 });
         }
 
@@ -106,19 +158,34 @@
 
         function viewReport(id) {
             fetch(`/api/reports/${id}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('获取报告失败');
+                    return res.json();
+                })
                 .then(data => {
                     document.getElementById('reportTitle').textContent = data.reportTitle;
                     document.getElementById('reportContent').textContent = data.reportContent;
                     document.getElementById('modal').style.display = 'flex';
+                })
+                .catch(err => {
+                    console.error('查看报告失败:', err);
+                    showMessage('error', '查看报告失败: ' + err.message);
                 });
         }
 
         function deleteReport(id) {
-            if (confirm('确定要删除该报告吗？')) {
-                fetch(`/api/reports/${id}`, { method: 'DELETE' })
-                    .then(() => loadReports());
-            }
+            if (!confirm('确定要删除该报告吗？')) return;
+            
+            fetch(`/api/reports/${id}`, { method: 'DELETE' })
+                .then(res => {
+                    if (!res.ok) throw new Error('删除失败');
+                    showMessage('success', '报告删除成功！');
+                    loadReports();
+                })
+                .catch(err => {
+                    console.error('删除报告失败:', err);
+                    showMessage('error', '删除报告失败: ' + err.message);
+                });
         }
 
         function closeModal() {

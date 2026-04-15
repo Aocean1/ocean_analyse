@@ -4,6 +4,7 @@ import com.example.oceananalyse.entity.CoreSample;
 import com.example.oceananalyse.repository.CoreSampleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,5 +63,14 @@ public class CoreSampleService {
 
     public List<CoreSample> searchByDepthRange(Double minDepth, Double maxDepth) {
         return coreSampleRepository.findByDepthFromBetween(minDepth, maxDepth);
+    }
+    
+    public List<CoreSample> searchByConditions(String sampleNo, String basinName, 
+                                                String lithology, Double minDepth, Double maxDepth) {
+        sampleNo = StringUtils.isEmpty(sampleNo) ? null : sampleNo.trim();
+        basinName = StringUtils.isEmpty(basinName) ? null : basinName.trim();
+        lithology = StringUtils.isEmpty(lithology) ? null : lithology.trim();
+        
+        return coreSampleRepository.searchByMultipleConditions(sampleNo, basinName, lithology, minDepth, maxDepth);
     }
 }

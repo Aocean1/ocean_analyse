@@ -135,10 +135,32 @@
         const API_URL = '/api/core-samples';
 
         function loadCoreSamples() {
+            console.log('开始加载岩心数据...');
+            const tbody = document.querySelector('#coreSampleTable tbody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">正在加载数据...</td></tr>';
+            
             fetch(API_URL)
-                .then(res => res.json())
+                .then(res => {
+                    console.log('API响应状态:', res.status);
+                    if (!res.ok) {
+                        throw new Error(`HTTP错误: ${res.status}`);
+                    }
+                    return res.json();
+                })
                 .then(data => {
-                    const tbody = document.querySelector('#coreSampleTable tbody');
+                    console.log('API返回数据:', data);
+                    console.log('数据类型:', Array.isArray(data) ? '数组' : typeof data);
+                    
+                    if (!Array.isArray(data)) {
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#e74c3c;">❌ 数据格式错误，期望数组类型</td></tr>';
+                        return;
+                    }
+                    
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#999;">📭 暂无岩心数据，请添加新岩心</td></tr>';
+                        return;
+                    }
+                    
                     tbody.innerHTML = data.map(item => `
                         <tr>
                             <td>${item.sampleNo}</td>
@@ -154,6 +176,11 @@
                             </td>
                         </tr>
                     `).join('');
+                })
+                .catch(err => {
+                    console.error('加载岩心数据失败:', err);
+                    const tbody = document.querySelector('#coreSampleTable tbody');
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:#e74c3c;">❌ 加载数据失败: ${err.message}</td></tr>`;
                 });
         }
 
@@ -197,12 +224,15 @@
         document.getElementById('coreSampleForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const id = document.getElementById('formId').value;
+            const depthFromValue = document.getElementById('formDepthFrom').value;
+            const depthToValue = document.getElementById('formDepthTo').value;
+            
             const data = {
                 sampleNo: document.getElementById('formSampleNo').value,
                 basinName: document.getElementById('formBasinName').value || null,
                 location: document.getElementById('formLocation').value || null,
-                depthFrom: parseFloat(document.getElementById('formDepthFrom').value) || null,
-                depthTo: parseFloat(document.getElementById('formDepthTo').value) || null,
+                depthFrom: depthFromValue ? parseFloat(depthFromValue) : null,
+                depthTo: depthToValue ? parseFloat(depthToValue) : null,
                 formation: document.getElementById('formFormation').value || null,
                 lithology: document.getElementById('formLithology').value || null,
                 color: document.getElementById('formColor').value || null,
@@ -216,41 +246,56 @@
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
+            }).then(res => {
+                if (!res.ok) {
+                    throw new Error('保存失败，请检查岩心编号是否重复或数据格式是否正确');
+                }
+                return res.json();
             }).then(() => {
                 closeModal();
                 loadCoreSamples();
+                alert('保存成功！');
+            }).catch(err => {
+                console.error('保存失败:', err);
+                alert('保存失败：' + err.message);
             });
         });
 
         function searchCoreSamples() {
-            const params = new URLSearchParams();
-            const sampleNo = document.getElementById('searchSampleNo').value;
-            const basin = document.getElementById('searchBasin').value;
-            const lithology = document.getElementById('searchLithology').value;
-            const minDepth = document.getElementById('searchMinDepth').value;
-            const maxDepth = document.getElementById('searchMaxDepth').value;
+            const sampleNo = document.getElementById('searchSampleNo').value.trim();
+            const basin = document.getElementById('searchBasin').value.trim();
+            const lithology = document.getElementById('searchLithology').value.trim();
+            const minDepth = document.getElementById('searchMinDepth').value.trim();
+            const maxDepth = document.getElementById('searchMaxDepth').value.trim();
             
+            const params = new URLSearchParams();
+            if (sampleNo) params.append('sampleNo', sampleNo);
             if (basin) params.append('basinName', basin);
             if (lithology) params.append('lithology', lithology);
-            if (minDepth && maxDepth) {
-                fetch(`${API_URL}/search/depth?minDepth=${minDepth}&maxDepth=${maxDepth}`)
-                    .then(res => res.json())
-                    .then(displayResults);
-                return;
-            }
-            if (basin) {
-                fetch(`${API_URL}/search/basin?basinName=${basin}`)
-                    .then(res => res.json())
-                    .then(displayResults);
-                return;
-            }
-            if (lithology) {
-                fetch(`${API_URL}/search/lithology?lithology=${lithology}`)
-                    .then(res => res.json())
-                    .then(displayResults);
-                return;
-            }
-            loadCoreSamples();
+            if (minDepth) params.append('minDepth', parseFloat(minDepth));
+            if (maxDepth) params.append('maxDepth', parseFloat(maxDepth));
+            
+            const tbody = document.querySelector('#coreSampleTable tbody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">正在搜索...</td></tr>';
+            
+            fetch(`${API_URL}/search?${params.toString()}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP错误: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#999;">😔 没有找到匹配的岩心数据，请尝试调整搜索条件</td></tr>';
+                    } else {
+                        displayResults(data);
+                    }
+                })
+                .catch(err => {
+                    console.error('搜索失败:', err);
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:#e74c3c;">❌ 搜索失败: ${err.message}</td></tr>`;
+                });
         }
 
         function displayResults(data) {

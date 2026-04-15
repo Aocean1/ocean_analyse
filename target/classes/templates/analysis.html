@@ -203,13 +203,71 @@
     </div>
 
     <script>
+        function showMessage(type, message) {
+            const colors = {
+                success: '#4CAF50',
+                error: '#e74c3c',
+                info: '#3498db',
+                warning: '#f39c12'
+            };
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                warning: '⚠️'
+            };
+            
+            let msgDiv = document.getElementById('globalMessage');
+            if (!msgDiv) {
+                msgDiv = document.createElement('div');
+                msgDiv.id = 'globalMessage';
+                msgDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: bold;
+                    z-index: 1000;
+                    box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+                    transform: translateX(120%);
+                    transition: transform 0.3s ease;
+                `;
+                document.body.appendChild(msgDiv);
+            }
+            
+            msgDiv.style.backgroundColor = colors[type];
+            msgDiv.innerHTML = `${icons[type]} ${message}`;
+            msgDiv.style.transform = 'translateX(0)';
+            
+            setTimeout(() => {
+                msgDiv.style.transform = 'translateX(120%)';
+            }, 3000);
+        }
+
         function loadCoreSamples() {
+            const select = document.getElementById('coreSampleSelect');
+            select.innerHTML = '<option value="">加载中...</option>';
+            
             fetch('/api/core-samples')
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP错误: ${res.status}`);
+                    return res.json();
+                })
                 .then(data => {
-                    const select = document.getElementById('coreSampleSelect');
-                    select.innerHTML = '<option value="">请选择...</option>' +
-                        data.map(item => `<option value="${item.id}">${item.sampleNo} - ${item.basinName || '未指定盆地'}</option>`).join('');
+                    if (!data || data.length === 0) {
+                        select.innerHTML = '<option value="">暂无岩心数据</option>';
+                        showMessage('warning', '请先在岩心管理页面添加岩心样本');
+                    } else {
+                        select.innerHTML = '<option value="">请选择...</option>' +
+                            data.map(item => `<option value="${item.id}">${item.sampleNo} - ${item.basinName || '未指定盆地'}</option>`).join('');
+                    }
+                })
+                .catch(err => {
+                    console.error('加载岩心数据失败:', err);
+                    select.innerHTML = '<option value="">加载失败</option>';
+                    showMessage('error', '加载岩心数据失败: ' + err.message);
                 });
         }
 
@@ -316,7 +374,7 @@
             e.preventDefault();
             const coreId = document.getElementById('coreSampleSelect').value;
             if (!coreId) {
-                alert('请先选择岩心样本');
+                showMessage('warning', '请先选择岩心样本');
                 return;
             }
             const id = document.getElementById('holeId').value;
@@ -334,13 +392,24 @@
             const url = id ? `/api/hole-analysis/${id}` : `/api/hole-analysis/core/${coreId}`;
             const method = id ? 'PUT' : 'POST';
             fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-                .then(() => { alert('保存成功'); loadAnalysisData(); });
+                .then(res => {
+                    if (!res.ok) throw new Error('保存失败');
+                    showMessage('success', '孔洞分析保存成功！');
+                    loadAnalysisData();
+                })
+                .catch(err => {
+                    console.error('保存失败:', err);
+                    showMessage('error', '保存失败: ' + err.message);
+                });
         });
 
         document.getElementById('grainForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const coreId = document.getElementById('coreSampleSelect').value;
-            if (!coreId) { alert('请先选择岩心样本'); return; }
+            if (!coreId) {
+                showMessage('warning', '请先选择岩心样本');
+                return;
+            }
             const id = document.getElementById('grainId').value;
             const data = {
                 avgGrainSize: parseFloat(document.getElementById('avgGrainSize').value) || null,
@@ -357,13 +426,24 @@
             const url = id ? `/api/grain-size-analysis/${id}` : `/api/grain-size-analysis/core/${coreId}`;
             const method = id ? 'PUT' : 'POST';
             fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-                .then(() => { alert('保存成功'); loadAnalysisData(); });
+                .then(res => {
+                    if (!res.ok) throw new Error('保存失败');
+                    showMessage('success', '粒度分析保存成功！');
+                    loadAnalysisData();
+                })
+                .catch(err => {
+                    console.error('保存失败:', err);
+                    showMessage('error', '保存失败: ' + err.message);
+                });
         });
 
         document.getElementById('fractureForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const coreId = document.getElementById('coreSampleSelect').value;
-            if (!coreId) { alert('请先选择岩心样本'); return; }
+            if (!coreId) {
+                showMessage('warning', '请先选择岩心样本');
+                return;
+            }
             const id = document.getElementById('fractureId').value;
             const data = {
                 fractureDensity: parseFloat(document.getElementById('fractureDensity').value) || null,
@@ -379,14 +459,35 @@
             const url = id ? `/api/fracture-analysis/${id}` : `/api/fracture-analysis/core/${coreId}`;
             const method = id ? 'PUT' : 'POST';
             fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-                .then(() => { alert('保存成功'); loadAnalysisData(); });
+                .then(res => {
+                    if (!res.ok) throw new Error('保存失败');
+                    showMessage('success', '裂缝分析保存成功！');
+                    loadAnalysisData();
+                })
+                .catch(err => {
+                    console.error('保存失败:', err);
+                    showMessage('error', '保存失败: ' + err.message);
+                });
         });
 
         function generateReport() {
             const coreId = document.getElementById('coreSampleSelect').value;
-            if (!coreId) { alert('请先选择岩心样本'); return; }
+            if (!coreId) {
+                showMessage('warning', '请先选择岩心样本');
+                return;
+            }
             fetch(`/api/reports/generate/${coreId}`, { method: 'POST' })
-                .then(() => { alert('报告生成成功'); window.location.href = '/reports'; });
+                .then(res => {
+                    if (!res.ok) throw new Error('生成失败');
+                    showMessage('success', '报告生成成功！正在跳转...');
+                    setTimeout(() => {
+                        window.location.href = '/reports';
+                    }, 1500);
+                })
+                .catch(err => {
+                    console.error('生成报告失败:', err);
+                    showMessage('error', '生成报告失败: ' + err.message);
+                });
         }
 
         loadCoreSamples();
