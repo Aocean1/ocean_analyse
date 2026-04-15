@@ -156,7 +156,7 @@
         
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 25px;
         }
         
@@ -173,10 +173,10 @@
             text-align: center;
             box-shadow: 0 6px 25px rgba(0,0,0,0.08);
             transition: all 0.25s ease;
-            min-height: 220px;
+            height: 260px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
         }
         
         .feature-card:hover {
@@ -187,23 +187,25 @@
         
         .feature-icon {
             font-size: 40px;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            flex-shrink: 0;
         }
         
         .feature-card h3 {
             color: #2c3e50;
-            margin-bottom: 12px;
-            font-size: 20px;
+            margin-bottom: 14px;
+            font-size: 18px;
             font-weight: 600;
+            flex-shrink: 0;
         }
         
         .feature-card p {
             color: #6b7c93;
             font-size: 13px;
-            line-height: 1.7;
+            line-height: 1.6;
             flex-grow: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
         }
         
@@ -213,6 +215,18 @@
             color: rgba(255, 255, 255, 0.7);
             margin-top: 60px;
             font-size: 13px;
+        }
+        
+        @media (max-width: 900px) {
+            .features {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .features {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media (prefers-reduced-motion: reduce) {

@@ -265,15 +265,15 @@
             const sampleNo = document.getElementById('searchSampleNo').value.trim();
             const basin = document.getElementById('searchBasin').value.trim();
             const lithology = document.getElementById('searchLithology').value.trim();
-            const minDepth = document.getElementById('searchMinDepth').value.trim();
-            const maxDepth = document.getElementById('searchMaxDepth').value.trim();
+            const minDepth = parseFloat(document.getElementById('searchMinDepth').value) || null;
+            const maxDepth = parseFloat(document.getElementById('searchMaxDepth').value) || null;
             
             const params = new URLSearchParams();
             if (sampleNo) params.append('sampleNo', sampleNo);
             if (basin) params.append('basinName', basin);
             if (lithology) params.append('lithology', lithology);
-            if (minDepth) params.append('minDepth', parseFloat(minDepth));
-            if (maxDepth) params.append('maxDepth', parseFloat(maxDepth));
+            if (minDepth !== null && !isNaN(minDepth)) params.append('minDepth', minDepth);
+            if (maxDepth !== null && !isNaN(maxDepth)) params.append('maxDepth', maxDepth);
             
             const tbody = document.querySelector('#coreSampleTable tbody');
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">正在搜索...</td></tr>';
