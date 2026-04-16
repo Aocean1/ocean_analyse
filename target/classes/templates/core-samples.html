@@ -191,7 +191,10 @@
             <div class="images-preview" id="imagesPreview"></div>
             
             <div class="analysis-results" id="analysisResults" style="display: none;">
-                <h3>📊 图片分析结果</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>📊 图片分析结果</h3>
+                    <button type="button" class="btn btn-analyze" onclick="reanalyzeCurrentImage()" style="display: none;" id="reanalyzeBtn">重新分析</button>
+                </div>
                 <div class="analysis-grid" id="analysisGrid"></div>
             </div>
             
@@ -206,6 +209,7 @@
         const API_URL = '/api/core-samples';
         let selectedCoreId = null;
         let uploadedImages = [];
+        let currentViewingImageId = null;
 
         function loadCoreSamples() {
             console.log('开始加载岩心数据...');
@@ -316,16 +320,80 @@
                     if (images && images.length > 0) {
                         const preview = document.getElementById('imagesPreview');
                         preview.innerHTML = images.map(img => `
-                            <div class="image-item">
-                                <img src="${img.imageUrl}" alt="岩心图片">
-                                <button class="delete-btn" onclick="deleteSingleImage(${img.id})">×</button>
+                            <div class="image-item" style="cursor: pointer;" onclick="viewImageAnalysis(${img.id})">
+                                <img src="${img.imageUrl}" alt="岩心图片" title="点击查看分析结果">
+                                <button class="delete-btn" onclick="event.stopPropagation(); deleteSingleImage(${img.id})">×</button>
+                                <div class="image-label">点击查看分析</div>
                             </div>
                         `).join('');
+                        
+                        document.getElementById('analyzeBtn').style.display = 'inline-block';
                     }
                 })
                 .catch(error => {
                     console.error('加载图片列表失败:', error);
                 });
+        }
+
+        function viewImageAnalysis(imageId) {
+            currentViewingImageId = imageId;
+            fetch(`/api/image-analysis/${imageId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP错误: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success && data.analysis) {
+                        displayAnalysisResults(data.analysis);
+                        document.getElementById('reanalyzeBtn').style.display = 'inline-block';
+                    } else {
+                        alert('未找到分析结果，请重新分析');
+                    }
+                })
+                .catch(error => {
+                    console.error('获取图片分析结果失败:', error);
+                    alert('获取分析结果失败: ' + error.message);
+                });
+        }
+
+        function reanalyzeCurrentImage() {
+            if (!currentViewingImageId) {
+                alert('请先选择一张图片查看');
+                return;
+            }
+            
+            const reanalyzeBtn = document.getElementById('reanalyzeBtn');
+            const originalText = reanalyzeBtn.textContent;
+            reanalyzeBtn.textContent = '分析中...';
+            reanalyzeBtn.disabled = true;
+            
+            fetch(`/api/image-analysis/reanalyze/${currentViewingImageId}`, {
+                method: 'POST'
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP错误: ${res.status} - ${res.statusText}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success && data.analysis) {
+                    displayAnalysisResults(data.analysis);
+                    alert('重新分析成功');
+                } else {
+                    throw new Error(data.message || '重新分析失败');
+                }
+            })
+            .catch(error => {
+                console.error('重新分析失败:', error);
+                alert('重新分析失败: ' + error.message);
+            })
+            .finally(() => {
+                reanalyzeBtn.textContent = originalText;
+                reanalyzeBtn.disabled = false;
+            });
         }
 
         function deleteSingleImage(imageId) {

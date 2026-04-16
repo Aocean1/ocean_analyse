@@ -42,6 +42,48 @@ public class CoreImage {
     @Column(name = "format", length = 50)
     private String format;
 
+    @Column(name = "hole_count")
+    private Integer holeCount;
+
+    @Column(name = "avg_hole_size")
+    private Double avgHoleSize;
+
+    @Column(name = "porosity")
+    private Double porosity;
+
+    @Column(name = "grain_size")
+    private Double grainSize;
+
+    @Column(name = "grain_count")
+    private Integer grainCount;
+
+    @Column(name = "roundness")
+    private Double roundness;
+
+    @Column(name = "grain_shape", length = 20)
+    private String grainShape;
+
+    @Column(name = "sorting", length = 20)
+    private String sorting;
+
+    @Column(name = "fracture_count")
+    private Integer fractureCount;
+
+    @Column(name = "fracture_length")
+    private Double fractureLength;
+
+    @Column(name = "fracture_orientation", length = 20)
+    private String fractureOrientation;
+
+    @Column(name = "brightness")
+    private Double brightness;
+
+    @Column(name = "contrast")
+    private Double contrast;
+
+    @Column(name = "entropy")
+    private Double entropy;
+
     @Column(name = "upload_time")
     private LocalDateTime uploadTime;
 

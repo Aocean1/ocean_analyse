@@ -4,12 +4,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
 
 @Service
 public class ImageAnalysisService {
@@ -22,8 +20,40 @@ public class ImageAnalysisService {
 
     public Map<String, Object> analyzeImage(MultipartFile file) throws IOException {
         String imageUrl = fileStorageService.uploadFile(file);
-        
-        BufferedImage image = ImageIO.read(new ByteArrayInputStream(file.getBytes()));
+        return analyzeImageInternal(file.getBytes(), file.getSize(), file.getContentType(), imageUrl);
+    }
+
+    public Map<String, Object> analyzeImageWithoutUpload(MultipartFile file, String existingImageUrl) throws IOException {
+        return analyzeImageInternal(file.getBytes(), file.getSize(), file.getContentType(), existingImageUrl);
+    }
+
+    public Map<String, Object> reanalyzeFromFile(java.io.File file, String existingImageUrl, String contentType) throws IOException {
+        byte[] fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
+        return analyzeImageInternal(fileBytes, file.length(), contentType, existingImageUrl);
+    }
+
+    public List<Map<String, Object>> batchReanalyze(List<java.io.File> files, List<String> imageUrls, List<String> contentTypes) throws IOException {
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (int i = 0; i < files.size(); i++) {
+            try {
+                Map<String, Object> result = reanalyzeFromFile(files.get(i), 
+                    imageUrls.get(i), contentTypes.get(i));
+                result.put("success", true);
+                result.put("index", i);
+                results.add(result);
+            } catch (Exception e) {
+                Map<String, Object> errorResult = new HashMap<>();
+                errorResult.put("success", false);
+                errorResult.put("index", i);
+                errorResult.put("error", e.getMessage());
+                results.add(errorResult);
+            }
+        }
+        return results;
+    }
+
+    private Map<String, Object> analyzeImageInternal(byte[] fileBytes, long fileSize, String contentType, String imageUrl) throws IOException {
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(fileBytes));
         int width = image.getWidth();
         int height = image.getHeight();
         
@@ -31,8 +61,8 @@ public class ImageAnalysisService {
         analysisResult.put("imageUrl", imageUrl);
         analysisResult.put("width", width);
         analysisResult.put("height", height);
-        analysisResult.put("fileSize", file.getSize());
-        analysisResult.put("format", file.getContentType());
+        analysisResult.put("fileSize", fileSize);
+        analysisResult.put("format", contentType);
         
         BufferedImage grayImage = convertToGrayscale(image);
         analysisResult.putAll(analyzeImageFeatures(grayImage));
@@ -40,7 +70,60 @@ public class ImageAnalysisService {
         analysisResult.putAll(analyzeGrainSize(grayImage));
         analysisResult.putAll(detectFractures(grayImage));
         
+        analysisResult.put("analysisTime", new Date().toString());
+        
         return analysisResult;
+    }
+
+    public Map<String, Object> compareAnalysisResults(Map<String, Object> oldResult, Map<String, Object> newResult) {
+        Map<String, Object> comparison = new HashMap<>();
+        comparison.put("hasChanges", false);
+        
+        List<String> numericFields = Arrays.asList("holeCount", "avgHoleSize", "porosity", 
+            "grainSize", "grainCount", "roundness", "fractureCount", 
+            "fractureLength", "brightness", "contrast", "entropy");
+        List<String> stringFields = Arrays.asList("grainShape", "sorting", "fractureOrientation");
+        
+        Map<String, Object> changes = new HashMap<>();
+        
+        for (String field : numericFields) {
+            Object oldVal = oldResult.get(field);
+            Object newVal = newResult.get(field);
+            
+            if (oldVal instanceof Number && newVal instanceof Number) {
+                double oldNum = ((Number) oldVal).doubleValue();
+                double newNum = ((Number) newVal).doubleValue();
+                double diff = Math.abs(newNum - oldNum);
+                
+                if (diff > 0.001) {
+                    comparison.put("hasChanges", true);
+                    Map<String, Object> changeDetail = new HashMap<>();
+                    changeDetail.put("oldValue", oldNum);
+                    changeDetail.put("newValue", newNum);
+                    changeDetail.put("difference", String.format("%.4f", diff));
+                    changeDetail.put("percentChange", String.format("%.2f%%", (newNum - oldNum) / (oldNum == 0 ? 1 : oldNum) * 100));
+                    changes.put(field, changeDetail);
+                }
+            }
+        }
+        
+        for (String field : stringFields) {
+            String oldVal = (String) oldResult.get(field);
+            String newVal = (String) newResult.get(field);
+            
+            if (!Objects.equals(oldVal, newVal)) {
+                comparison.put("hasChanges", true);
+                Map<String, Object> changeDetail = new HashMap<>();
+                changeDetail.put("oldValue", oldVal);
+                changeDetail.put("newValue", newVal);
+                changes.put(field, changeDetail);
+            }
+        }
+        
+        comparison.put("changes", changes);
+        comparison.put("changeCount", changes.size());
+        
+        return comparison;
     }
 
     private BufferedImage convertToGrayscale(BufferedImage image) {
@@ -64,26 +147,33 @@ public class ImageAnalysisService {
         int height = grayImage.getHeight();
         int totalPixels = width * height;
         
+        if (totalPixels == 0) {
+            features.put("brightness", 0.0);
+            features.put("contrast", 0.0);
+            features.put("entropy", 0.0);
+            return features;
+        }
+        
         int[] histogram = new int[256];
         long sum = 0;
+        int minGray = 255;
+        int maxGray = 0;
         
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int gray = grayImage.getRGB(x, y) & 0xFF;
                 histogram[gray]++;
                 sum += gray;
+                minGray = Math.min(minGray, gray);
+                maxGray = Math.max(maxGray, gray);
             }
         }
         
         double meanBrightness = (double) sum / totalPixels;
-        features.put("brightness", meanBrightness / 255.0);
+        features.put("brightness", Math.round(meanBrightness / 255.0 * 100) / 100.0);
         
-        double variance = 0;
-        for (int i = 0; i < 256; i++) {
-            variance += histogram[i] * Math.pow(i - meanBrightness, 2);
-        }
-        variance /= totalPixels;
-        features.put("contrast", Math.sqrt(variance) / 255.0);
+        double dynamicRange = maxGray - minGray;
+        features.put("contrast", Math.round(dynamicRange / 255.0 * 100) / 100.0);
         
         double entropy = 0;
         for (int count : histogram) {
@@ -92,7 +182,7 @@ public class ImageAnalysisService {
                 entropy -= prob * Math.log(prob) / Math.log(2);
             }
         }
-        features.put("entropy", entropy);
+        features.put("entropy", Math.round(entropy * 100) / 100.0);
         
         return features;
     }
@@ -103,19 +193,28 @@ public class ImageAnalysisService {
         int width = grayImage.getWidth();
         int height = grayImage.getHeight();
         
-        BufferedImage blurred = applyGaussianBlur(grayImage, 3);
+        BufferedImage blurred = applyGaussianBlur(grayImage, 5);
+        
         int threshold = calculateOtsuThreshold(blurred);
+        int adaptiveThreshold = Math.min(threshold + 30, 180);
         
         boolean[][] binaryImage = new boolean[height][width];
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int gray = blurred.getRGB(x, y) & 0xFF;
-                binaryImage[y][x] = gray < threshold;
+                binaryImage[y][x] = gray < adaptiveThreshold;
             }
         }
         
-        List<Blob> holes = findBlobs(binaryImage, width, height);
-        holes.removeIf(blob -> blob.area < 10 || blob.area > 5000);
+        boolean[][] inverted = new boolean[height][width];
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                inverted[y][x] = !binaryImage[y][x];
+            }
+        }
+        
+        List<Blob> holes = findBlobs(inverted, width, height);
+        holes.removeIf(blob -> blob.area < 5 || blob.area > 20000);
         
         result.put("holeCount", holes.size());
         
@@ -128,9 +227,10 @@ public class ImageAnalysisService {
             double maxDiameter = Math.sqrt(4 * maxArea / Math.PI);
             double minDiameter = Math.sqrt(4 * minArea / Math.PI);
             
-            result.put("avgHoleSize", Math.round(avgDiameter * 100) / 100.0);
-            result.put("maxHoleSize", Math.round(maxDiameter * 100) / 100.0);
-            result.put("minHoleSize", Math.round(minDiameter * 100) / 100.0);
+            double scaleFactor = 0.1;
+            result.put("avgHoleSize", Math.round(avgDiameter * scaleFactor * 100) / 100.0);
+            result.put("maxHoleSize", Math.round(maxDiameter * scaleFactor * 100) / 100.0);
+            result.put("minHoleSize", Math.round(minDiameter * scaleFactor * 100) / 100.0);
             
             int holePixels = holes.stream().mapToInt(b -> b.area).sum();
             double porosity = (double) holePixels / (width * height) * 100;
@@ -292,40 +392,42 @@ public class ImageAnalysisService {
         int width = grayImage.getWidth();
         int height = grayImage.getHeight();
         
-        BufferedImage edges = applyCannyEdgeDetection(grayImage);
+        BufferedImage blurred = applyGaussianBlur(grayImage, 3);
+        int threshold = calculateOtsuThreshold(blurred);
         
-        boolean[][] edgeImage = new boolean[height][width];
+        boolean[][] binaryImage = new boolean[height][width];
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                edgeImage[y][x] = (edges.getRGB(x, y) & 0xFF) > 128;
+                int gray = blurred.getRGB(x, y) & 0xFF;
+                binaryImage[y][x] = gray > threshold;
             }
         }
         
-        boolean[][] inverted = new boolean[height][width];
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                inverted[y][x] = !edgeImage[y][x];
-            }
-        }
-        
-        List<Blob> grains = findBlobs(inverted, width, height);
-        grains.removeIf(blob -> blob.area < 20 || blob.area > 2000);
+        List<Blob> grains = findBlobs(binaryImage, width, height);
+        grains.removeIf(blob -> blob.area < 8 || blob.area > 5000);
         
         if (!grains.isEmpty()) {
-            double avgArea = grains.stream().mapToInt(b -> b.area).average().orElse(0);
+            double avgArea = grains.stream().mapToInt(b -> b.area).average().orElse(1);
             double avgSize = Math.sqrt(avgArea);
             
-            result.put("grainSize", Math.round(avgSize * 100) / 100.0);
+            double scaleFactor = 0.1;
+            result.put("grainSize", Math.round(avgSize * scaleFactor * 100) / 100.0);
             result.put("grainCount", grains.size());
             
             double roundnessSum = 0;
+            int validGrains = 0;
             for (Blob grain : grains) {
                 int w = grain.maxX - grain.minX + 1;
                 int h = grain.maxY - grain.minY + 1;
-                double aspectRatio = (double) Math.max(w, h) / Math.min(w, h);
-                roundnessSum += 1.0 / aspectRatio;
+                if (w > 0 && h > 0) {
+                    double aspectRatio = (double) Math.max(w, h) / Math.min(w, h);
+                    roundnessSum += 1.0 / aspectRatio;
+                    validGrains++;
+                }
             }
-            result.put("roundness", Math.round((roundnessSum / grains.size()) * 100) / 100.0);
+            
+            double avgRoundness = validGrains > 0 ? roundnessSum / validGrains : 0.5;
+            result.put("roundness", Math.round(avgRoundness * 100) / 100.0);
             result.put("grainShape", classifyGrainShape(result.get("roundness")));
             result.put("sorting", classifySorting(grains));
         } else {
@@ -431,7 +533,8 @@ public class ImageAnalysisService {
         
         if (!lines.isEmpty()) {
             double avgLength = lines.stream().mapToDouble(l -> l.length).average().orElse(0);
-            result.put("fractureLength", Math.round(avgLength * 100) / 100.0);
+            double scaleFactor = 0.1;
+            result.put("fractureLength", Math.round(avgLength * scaleFactor * 100) / 100.0);
             
             String orientation = classifyOrientation(lines);
             result.put("fractureOrientation", orientation);
