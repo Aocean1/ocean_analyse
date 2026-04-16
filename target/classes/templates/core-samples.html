@@ -39,6 +39,11 @@
     </style>
 </head>
 <body>
+    <script>
+        if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+            window.location.href = '/login';
+        }
+    </script>
     <div class="header">
         <h1>🌊 岩心管理</h1>
         <div class="nav">
@@ -68,10 +73,11 @@
                     <tr>
                         <th>岩心编号</th>
                         <th>盆地名称</th>
-                        <th>采样位置</th>
-                        <th>深度(m)</th>
                         <th>地层</th>
                         <th>岩性</th>
+                        <th>沉积构造</th>
+                        <th>采样位置</th>
+                        <th>深度(m)</th>
                         <th>颜色</th>
                         <th>操作</th>
                     </tr>
@@ -96,6 +102,18 @@
                     <input type="text" id="formBasinName">
                 </div>
                 <div class="form-group">
+                    <label>地层</label>
+                    <input type="text" id="formStratum">
+                </div>
+                <div class="form-group">
+                    <label>岩性</label>
+                    <input type="text" id="formLithology">
+                </div>
+                <div class="form-group">
+                    <label>沉积构造</label>
+                    <input type="text" id="formSedimentaryStructure">
+                </div>
+                <div class="form-group">
                     <label>采样位置</label>
                     <input type="text" id="formLocation">
                 </div>
@@ -110,10 +128,6 @@
                 <div class="form-group">
                     <label>地层名称</label>
                     <input type="text" id="formFormation">
-                </div>
-                <div class="form-group">
-                    <label>岩性</label>
-                    <input type="text" id="formLithology">
                 </div>
                 <div class="form-group">
                     <label>颜色</label>
@@ -137,7 +151,7 @@
         function loadCoreSamples() {
             console.log('开始加载岩心数据...');
             const tbody = document.querySelector('#coreSampleTable tbody');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">正在加载数据...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#666;">正在加载数据...</td></tr>';
             
             fetch(API_URL)
                 .then(res => {
@@ -152,12 +166,12 @@
                     console.log('数据类型:', Array.isArray(data) ? '数组' : typeof data);
                     
                     if (!Array.isArray(data)) {
-                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#e74c3c;">❌ 数据格式错误，期望数组类型</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#e74c3c;">❌ 数据格式错误，期望数组类型</td></tr>';
                         return;
                     }
                     
                     if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#999;">📭 暂无岩心数据，请添加新岩心</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#999;">📭 暂无岩心数据，请添加新岩心</td></tr>';
                         return;
                     }
                     
@@ -165,10 +179,11 @@
                         <tr>
                             <td>${item.sampleNo}</td>
                             <td>${item.basinName || '-'}</td>
+                            <td>${item.stratum || '-'}</td>
+                            <td>${item.lithology || '-'}</td>
+                            <td>${item.sedimentaryStructure || '-'}</td>
                             <td>${item.location || '-'}</td>
                             <td>${item.depthFrom || 0} - ${item.depthTo || 0}</td>
-                            <td>${item.formation || '-'}</td>
-                            <td>${item.lithology || '-'}</td>
                             <td>${item.color || '-'}</td>
                             <td>
                                 <a href="#" class="btn btn-edit" onclick="editCoreSample(${item.id})">编辑</a>
@@ -180,7 +195,7 @@
                 .catch(err => {
                     console.error('加载岩心数据失败:', err);
                     const tbody = document.querySelector('#coreSampleTable tbody');
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:#e74c3c;">❌ 加载数据失败: ${err.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#e74c3c;">❌ 加载数据失败: ${err.message}</td></tr>`;
                 });
         }
 
@@ -203,11 +218,13 @@
                     document.getElementById('formId').value = data.id;
                     document.getElementById('formSampleNo').value = data.sampleNo;
                     document.getElementById('formBasinName').value = data.basinName || '';
+                    document.getElementById('formStratum').value = data.stratum || '';
+                    document.getElementById('formLithology').value = data.lithology || '';
+                    document.getElementById('formSedimentaryStructure').value = data.sedimentaryStructure || '';
                     document.getElementById('formLocation').value = data.location || '';
                     document.getElementById('formDepthFrom').value = data.depthFrom || '';
                     document.getElementById('formDepthTo').value = data.depthTo || '';
                     document.getElementById('formFormation').value = data.formation || '';
-                    document.getElementById('formLithology').value = data.lithology || '';
                     document.getElementById('formColor').value = data.color || '';
                     document.getElementById('formDescription').value = data.description || '';
                     document.getElementById('modal').style.display = 'flex';
@@ -230,11 +247,13 @@
             const data = {
                 sampleNo: document.getElementById('formSampleNo').value,
                 basinName: document.getElementById('formBasinName').value || null,
+                stratum: document.getElementById('formStratum').value || null,
+                lithology: document.getElementById('formLithology').value || null,
+                sedimentaryStructure: document.getElementById('formSedimentaryStructure').value || null,
                 location: document.getElementById('formLocation').value || null,
                 depthFrom: depthFromValue ? parseFloat(depthFromValue) : null,
                 depthTo: depthToValue ? parseFloat(depthToValue) : null,
                 formation: document.getElementById('formFormation').value || null,
-                lithology: document.getElementById('formLithology').value || null,
                 color: document.getElementById('formColor').value || null,
                 description: document.getElementById('formDescription').value || null
             };
@@ -276,7 +295,7 @@
             if (maxDepth !== null && !isNaN(maxDepth)) params.append('maxDepth', maxDepth);
             
             const tbody = document.querySelector('#coreSampleTable tbody');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">正在搜索...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#666;">正在搜索...</td></tr>';
             
             fetch(`${API_URL}/search?${params.toString()}`)
                 .then(res => {
@@ -287,14 +306,14 @@
                 })
                 .then(data => {
                     if (!data || data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#999;">😔 没有找到匹配的岩心数据，请尝试调整搜索条件</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#999;">😔 没有找到匹配的岩心数据，请尝试调整搜索条件</td></tr>';
                     } else {
                         displayResults(data);
                     }
                 })
                 .catch(err => {
                     console.error('搜索失败:', err);
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:#e74c3c;">❌ 搜索失败: ${err.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#e74c3c;">❌ 搜索失败: ${err.message}</td></tr>`;
                 });
         }
 
@@ -304,10 +323,11 @@
                 <tr>
                     <td>${item.sampleNo}</td>
                     <td>${item.basinName || '-'}</td>
+                    <td>${item.stratum || '-'}</td>
+                    <td>${item.lithology || '-'}</td>
+                    <td>${item.sedimentaryStructure || '-'}</td>
                     <td>${item.location || '-'}</td>
                     <td>${item.depthFrom || 0} - ${item.depthTo || 0}</td>
-                    <td>${item.formation || '-'}</td>
-                    <td>${item.lithology || '-'}</td>
                     <td>${item.color || '-'}</td>
                     <td>
                         <a href="#" class="btn btn-edit" onclick="editCoreSample(${item.id})">编辑</a>

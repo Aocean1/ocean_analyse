@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 - 海底地质岩心分析系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .logo p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(52, 152, 219, 0.5);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .form-group input.error {
+            border-color: rgba(231, 76, 60, 0.6);
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .form-group .input-error {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: #fff;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn-register {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: 10px;
+        }
+        
+        .btn-register:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .error-message {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #e74c3c;
+            text-align: center;
+            display: none;
+            animation: shake 0.3s ease;
+        }
+        
+        .success-message {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #2ecc71;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .info-message {
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-align: center;
+            display: none;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+        
+        .role-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .role-option {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+        
+        .role-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .role-option.selected {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+        }
+        
+        .role-option.admin { border-color: #e74c3c; }
+        .role-option.teacher { border-color: #f39c12; }
+        .role-option.user { border-color: #2ecc71; }
+        
+        .role-option.admin.selected { background: rgba(231, 76, 60, 0.3); }
+        .role-option.teacher.selected { background: rgba(243, 156, 18, 0.3); }
+        .role-option.user.selected { background: rgba(46, 204, 113, 0.3); }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🌊 海底地质岩心分析系统</h1>
+            <p>Submarine Geological Core Analysis System</p>
+        </div>
+        
+        <div class="error-message" id="errorMsg"></div>
+        <div class="success-message" id="successMsg"></div>
+        <div class="info-message" id="infoMsg"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名（2-20个字符）" required>
+                <div class="input-error" id="usernameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码（至少6个字符）" required>
+                <div class="input-error" id="passwordError"></div>
+            </div>
+            
+            <div>
+                <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 8px; font-size: 14px;">选择角色</label>
+                <div class="role-selector">
+                    <div class="role-option admin" data-role="3" onclick="selectRole(this)">管理员</div>
+                    <div class="role-option teacher" data-role="2" onclick="selectRole(this)">教师</div>
+                    <div class="role-option user selected" data-role="1" onclick="selectRole(this)">普通用户</div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" id="loginBtn">
+                <span class="btn-text">
+                    <span>登 录</span>
+                    <span class="loading-spinner" id="loginSpinner" style="display: none;"></span>
+                </span>
+            </button>
+            <button type="button" class="btn btn-register" onclick="showRegister()">注 册</button>
+        </form>
+        
+        <div class="footer">
+            <p>测试账号：admin / teacher / user | 密码：123456</p>
+        </div>
+    </div>
+
+    <!-- 注册弹窗 -->
+    <div id="registerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000;">
+        <div class="login-container" style="max-width: 450px;">
+            <div class="logo">
+                <h1>👤 用户注册</h1>
+                <p>创建新账户</p>
+            </div>
+            
+            <div class="error-message" id="registerError"></div>
+            <div class="success-message" id="registerSuccess"></div>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="regUsername" placeholder="请输入用户名（2-20个字符，字母或数字）" required>
+                    <div class="input-error" id="regUsernameError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="regPassword" placeholder="请输入密码（至少6个字符）" required>
+                    <div class="input-error" id="regPasswordError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>确认密码</label>
+                    <input type="password" id="regConfirmPassword" placeholder="请再次输入密码" required>
+                    <div class="input-error" id="regConfirmError"></div>
+                </div>
+                
+                <div>
+                    <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 8px; font-size: 14px;">选择角色</label>
+                    <div class="role-selector">
+                        <div class="role-option admin" data-role="3" onclick="selectRegisterRole(this)">管理员</div>
+                        <div class="role-option teacher" data-role="2" onclick="selectRegisterRole(this)">教师</div>
+                        <div class="role-option user selected" data-role="1" onclick="selectRegisterRole(this)">普通用户</div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    <span class="btn-text">
+                        <span>注 册</span>
+                        <span class="loading-spinner" id="registerSpinner" style="display: none;"></span>
+                    </span>
+                </button>
+                <button type="button" class="btn btn-register" onclick="hideRegister()">取 消</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let selectedRole = 1;
+        let selectedRegisterRole = 1;
+        
+        function selectRole(element) {
+            document.querySelectorAll('#loginForm .role-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedRole = parseInt(element.dataset.role);
+        }
+        
+        function selectRegisterRole(element) {
+            document.querySelectorAll('#registerForm .role-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedRegisterRole = parseInt(element.dataset.role);
+        }
+        
+        function showRegister() {
+            document.getElementById('registerModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function hideRegister() {
+            document.getElementById('registerModal').style.display = 'none';
+            document.getElementById('registerError').style.display = 'none';
+            document.getElementById('registerSuccess').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+            document.querySelectorAll('#registerForm .role-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector('#registerForm .role-option.user').classList.add('selected');
+            selectedRegisterRole = 1;
+        }
+        
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+        
+        function hideAllErrors() {
+            document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.input-error').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('input.error').forEach(el => el.classList.remove('error'));
+        }
+        
+        function validateUsername(username) {
+            if (!username || username.trim() === '') {
+                return '用户名不能为空';
+            }
+            if (username.length < 2 || username.length > 20) {
+                return '用户名长度必须在2-20个字符之间';
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                return '用户名只能包含字母、数字和下划线';
+            }
+            return null;
+        }
+        
+        function validatePassword(password) {
+            if (!password || password.trim() === '') {
+                return '密码不能为空';
+            }
+            if (password.length < 6) {
+                return '密码长度至少6个字符';
+            }
+            return null;
+        }
+        
+        async function handleLogin(e) {
+            e.preventDefault();
+            hideAllErrors();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const spinner = document.getElementById('loginSpinner');
+            
+            const usernameError = validateUsername(username);
+            const passwordError = validatePassword(password);
+            
+            if (usernameError) {
+                document.getElementById('username').classList.add('error');
+                showError('usernameError', usernameError);
+                return;
+            }
+            
+            if (passwordError) {
+                document.getElementById('password').classList.add('error');
+                showError('passwordError', passwordError);
+                return;
+            }
+            
+            loginBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            
+            try {
+                const response = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('token', 'logged-in');
+                    window.location.href = '/';
+                } else {
+                    const errorMsg = data.message || 
+                                   (response.status === 401 ? '用户名或密码错误' : 
+                                    response.status === 404 ? '用户不存在' : 
+                                    '登录失败，请稍后重试');
+                    showError('errorMsg', errorMsg);
+                }
+            } catch (error) {
+                console.error('登录请求失败:', error);
+                showError('errorMsg', '网络连接失败，请检查网络后重试');
+            } finally {
+                loginBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+        
+        async function handleRegister(e) {
+            e.preventDefault();
+            hideAllErrors();
+            
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const registerBtn = document.getElementById('registerBtn');
+            const spinner = document.getElementById('registerSpinner');
+            
+            const usernameError = validateUsername(username);
+            const passwordError = validatePassword(password);
+            
+            if (usernameError) {
+                document.getElementById('regUsername').classList.add('error');
+                showError('regUsernameError', usernameError);
+                return;
+            }
+            
+            if (passwordError) {
+                document.getElementById('regPassword').classList.add('error');
+                showError('regPasswordError', passwordError);
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                document.getElementById('regConfirmPassword').classList.add('error');
+                showError('regConfirmError', '两次输入的密码不一致');
+                return;
+            }
+            
+            registerBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            
+            try {
+                const response = await fetch('/api/users/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, userRole: selectedRegisterRole })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('registerSuccess').textContent = '注册成功！即将跳转到登录页面...';
+                    document.getElementById('registerSuccess').style.display = 'block';
+                    
+                    setTimeout(() => {
+                        hideRegister();
+                        document.getElementById('successMsg').textContent = '注册成功，请登录';
+                        document.getElementById('successMsg').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('successMsg').style.display = 'none';
+                        }, 3000);
+                    }, 1500);
+                } else {
+                    const errorMsg = data.message || 
+                                   (response.status === 409 ? '用户名已存在' : 
+                                    '注册失败，请稍后重试');
+                    showError('registerError', errorMsg);
+                }
+            } catch (error) {
+                console.error('注册请求失败:', error);
+                showError('registerError', '网络连接失败，请检查网络后重试');
+            } finally {
+                registerBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('registerForm').addEventListener('submit', handleRegister);
+        
+        document.getElementById('registerModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('registerModal')) {
+                hideRegister();
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('registerModal').style.display === 'flex') {
+                hideRegister();
+            }
+        });
+    </script>
+</body>
+</html>

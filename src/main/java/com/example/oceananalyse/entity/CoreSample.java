@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "core_sample")
+@Table(name = "core_info")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,13 +16,23 @@ public class CoreSample {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "core_id")
     private Long id;
 
     @Column(name = "sample_no", unique = true, nullable = false, length = 50)
     private String sampleNo;
 
-    @Column(name = "basin_name", length = 100)
+    @Column(name = "basin_name", length = 50)
     private String basinName;
+
+    @Column(name = "stratum", length = 30)
+    private String stratum;
+
+    @Column(name = "lithology", length = 30)
+    private String lithology;
+
+    @Column(name = "sedimentary_structure", length = 20)
+    private String sedimentaryStructure;
 
     @Column(name = "location", length = 200)
     private String location;
@@ -36,17 +46,11 @@ public class CoreSample {
     @Column(name = "formation", length = 100)
     private String formation;
 
-    @Column(name = "lithology", length = 100)
-    private String lithology;
-
     @Column(name = "color", length = 50)
     private String color;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
-
-    @Column(name = "image_path", length = 500)
-    private String imagePath;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

@@ -37,14 +37,15 @@ public class CoreSampleService {
         
         coreSample.setSampleNo(coreSampleDetails.getSampleNo());
         coreSample.setBasinName(coreSampleDetails.getBasinName());
+        coreSample.setStratum(coreSampleDetails.getStratum());
+        coreSample.setLithology(coreSampleDetails.getLithology());
+        coreSample.setSedimentaryStructure(coreSampleDetails.getSedimentaryStructure());
         coreSample.setLocation(coreSampleDetails.getLocation());
         coreSample.setDepthFrom(coreSampleDetails.getDepthFrom());
         coreSample.setDepthTo(coreSampleDetails.getDepthTo());
         coreSample.setFormation(coreSampleDetails.getFormation());
-        coreSample.setLithology(coreSampleDetails.getLithology());
         coreSample.setColor(coreSampleDetails.getColor());
         coreSample.setDescription(coreSampleDetails.getDescription());
-        coreSample.setImagePath(coreSampleDetails.getImagePath());
         
         return coreSampleRepository.save(coreSample);
     }

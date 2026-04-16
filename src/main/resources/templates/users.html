@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 海底地质岩心分析系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 300;
+        }
+        
+        .header .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: #fff;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .search-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .search-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .search-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        
+        .search-group input,
+        .search-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .search-group input:focus,
+        .search-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .search-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .table-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .role-admin {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .role-teacher {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+        
+        .role-user {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn.edit {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+        
+        .action-btn.edit:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        
+        .action-btn.delete {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .action-btn.delete:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            gap: 10px;
+        }
+        
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination span {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #fff;
+            font-size: 20px;
+        }
+        
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .error-message {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #e74c3c;
+            text-align: center;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #2ecc71;
+            text-align: center;
+            display: none;
+        }
+        
+        .checkbox-cell {
+            padding: 15px;
+        }
+        
+        .checkbox-cell input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .select-all {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .select-all label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+            window.location.href = '/login';
+        }
+    </script>
+    <div class="container">
+        <div class="header">
+            <h1>👥 用户管理</h1>
+            <div class="actions">
+                <button class="btn btn-danger" id="batchDeleteBtn" disabled>批量删除</button>
+                <button class="btn btn-primary" onclick="showAddModal()">+ 新增用户</button>
+            </div>
+        </div>
+        
+        <div class="search-bar">
+            <div class="search-row">
+                <div class="search-group">
+                    <label>用户名</label>
+                    <input type="text" id="searchUsername" placeholder="请输入用户名">
+                </div>
+                <div class="search-group">
+                    <label>角色</label>
+                    <select id="searchRole">
+                        <option value="">全部</option>
+                        <option value="3">管理员</option>
+                        <option value="2">教师</option>
+                        <option value="1">普通用户</option>
+                    </select>
+                </div>
+                <div class="search-group" style="flex: 0 0 auto;">
+                    <label style="visibility: hidden;">搜索</label>
+                    <button class="btn btn-primary" onclick="searchUsers()">搜索</button>
+                </div>
+                <div class="search-group" style="flex: 0 0 auto;">
+                    <label style="visibility: hidden;">重置</label>
+                    <button class="btn btn-secondary" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <div class="select-all">
+                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                <label for="selectAll">全选</label>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">选择</th>
+                        <th>用户ID</th>
+                        <th>用户名</th>
+                        <th>角色</th>
+                        <th>创建时间</th>
+                        <th style="width: 120px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination">
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑用户弹窗 -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增用户</h2>
+                <button class="close-btn" onclick="hideModal()">&times;</button>
+            </div>
+            <div class="error-message" id="modalError"></div>
+            <div class="success-message" id="modalSuccess"></div>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名（2-20个字符）" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码（至少6个字符）" required>
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="role">
+                        <option value="1">普通用户</option>
+                        <option value="2">教师</option>
+                        <option value="3">管理员</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>确认删除</h2>
+                <button class="close-btn" onclick="hideConfirmModal()">&times;</button>
+            </div>
+            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px;">确定要删除选中的用户吗？此操作不可撤销。</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="hideConfirmModal()">取消</button>
+                <button class="btn btn-danger" style="flex: 1;" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script>
+        let users = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedIds = [];
+        let editingUserId = null;
+
+        function getRoleName(role) {
+            switch(role) {
+                case 3: return '管理员';
+                case 2: return '教师';
+                case 1: return '普通用户';
+                default: return '未知';
+            }
+        }
+
+        function getRoleClass(role) {
+            switch(role) {
+                case 3: return 'role-admin';
+                case 2: return 'role-teacher';
+                case 1: return 'role-user';
+                default: return 'role-user';
+            }
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        async function loadUsers(page = 1) {
+            showLoading();
+            try {
+                const username = document.getElementById('searchUsername').value;
+                const role = document.getElementById('searchRole').value;
+                
+                let url = `/api/users?page=${page}`;
+                if (username) url += `&username=${encodeURIComponent(username)}`;
+                if (role) url += `&role=${role}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('获取用户列表失败');
+                }
+                const data = await response.json();
+                users = data.content || data;
+                
+                if (Array.isArray(data)) {
+                    totalPages = 1;
+                } else {
+                    totalPages = data.totalPages || 1;
+                }
+                
+                currentPage = page;
+                renderTable();
+                renderPagination();
+            } catch (error) {
+                console.error('加载用户失败:', error);
+                showError('加载用户列表失败，请稍后重试');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('userTableBody');
+            
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i>👤</i>
+                            <p>暂无用户数据</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" onchange="toggleSelect(${user.userId})" ${selectedIds.includes(user.userId) ? 'checked' : ''}>
+                    </td>
+                    <td>${user.userId}</td>
+                    <td>${user.username}</td>
+                    <td><span class="role-badge ${getRoleClass(user.userRole)}">${getRoleName(user.userRole)}</span></td>
+                    <td>${formatDateTime(user.createTime)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit" onclick="showEditModal(${user.userId})">编辑</button>
+                            <button class="action-btn delete" onclick="showDeleteConfirm(${user.userId})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <button onclick="loadUsers(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>
+                <span>第 ${currentPage} / ${totalPages} 页</span>
+                <button onclick="loadUsers(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>
+            `;
+            pagination.innerHTML = html;
+        }
+
+        function toggleSelect(userId) {
+            const index = selectedIds.indexOf(userId);
+            if (index === -1) {
+                selectedIds.push(userId);
+            } else {
+                selectedIds.splice(index, 1);
+            }
+            updateBatchDeleteButton();
+        }
+
+        function toggleSelectAll() {
+            const checkbox = document.getElementById('selectAll');
+            if (checkbox.checked) {
+                selectedIds = users.map(u => u.userId);
+            } else {
+                selectedIds = [];
+            }
+            updateBatchDeleteButton();
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb.id !== 'selectAll') {
+                    cb.checked = checkbox.checked;
+                }
+            });
+        }
+
+        function updateBatchDeleteButton() {
+            const btn = document.getElementById('batchDeleteBtn');
+            btn.disabled = selectedIds.length === 0;
+        }
+
+        function showAddModal() {
+            editingUserId = null;
+            document.getElementById('modalTitle').textContent = '新增用户';
+            document.getElementById('userId').value = '';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('role').value = '1';
+            document.getElementById('modalError').style.display = 'none';
+            document.getElementById('modalSuccess').style.display = 'none';
+            document.getElementById('userModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function showEditModal(userId) {
+            const user = users.find(u => u.userId === userId);
+            if (!user) return;
+            
+            editingUserId = userId;
+            document.getElementById('modalTitle').textContent = '编辑用户';
+            document.getElementById('userId').value = user.userId;
+            document.getElementById('username').value = user.username;
+            document.getElementById('password').value = '';
+            document.getElementById('password').removeAttribute('required');
+            document.getElementById('password').placeholder = '留空则不修改密码';
+            document.getElementById('role').value = user.userRole;
+            document.getElementById('modalError').style.display = 'none';
+            document.getElementById('modalSuccess').style.display = 'none';
+            document.getElementById('userModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideModal() {
+            document.getElementById('userModal').style.display = 'none';
+            document.getElementById('password').setAttribute('required', '');
+            document.getElementById('password').placeholder = '请输入密码（至少6个字符）';
+            document.body.style.overflow = 'auto';
+        }
+
+        async function saveUser(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('userId').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const role = parseInt(document.getElementById('role').value);
+            
+            if (!username) {
+                showModalError('用户名不能为空');
+                return;
+            }
+            
+            if (username.length < 2 || username.length > 20) {
+                showModalError('用户名长度必须在2-20个字符之间');
+                return;
+            }
+            
+            if (!id && !password) {
+                showModalError('密码不能为空');
+                return;
+            }
+            
+            if (password && password.length < 6) {
+                showModalError('密码长度至少6个字符');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const userData = { username, userRole: role };
+                if (password) userData.password = password;
+                
+                const url = id ? `/api/users/${id}` : '/api/users/register';
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showModalSuccess(id ? '更新成功' : '创建成功');
+                    setTimeout(() => {
+                        hideModal();
+                        loadUsers(currentPage);
+                    }, 1500);
+                } else {
+                    showModalError(data.message || '操作失败');
+                }
+            } catch (error) {
+                console.error('保存用户失败:', error);
+                showModalError('保存失败，请稍后重试');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showDeleteConfirm(userId) {
+            selectedIds = [userId];
+            document.getElementById('confirmModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        async function confirmDelete() {
+            showLoading();
+            
+            try {
+                for (const id of selectedIds) {
+                    const response = await fetch(`/api/users/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error('删除失败');
+                    }
+                }
+                
+                hideConfirmModal();
+                selectedIds = [];
+                updateBatchDeleteButton();
+                loadUsers(currentPage);
+                showSuccess('删除成功');
+            } catch (error) {
+                console.error('删除用户失败:', error);
+                showError('删除失败，请稍后重试');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function searchUsers() {
+            loadUsers(1);
+        }
+
+        function resetSearch() {
+            document.getElementById('searchUsername').value = '';
+            document.getElementById('searchRole').value = '';
+            loadUsers(1);
+        }
+
+        function showModalError(message) {
+            const error = document.getElementById('modalError');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function showModalSuccess(message) {
+            const success = document.getElementById('modalSuccess');
+            success.textContent = message;
+            success.style.display = 'block';
+        }
+
+        function showError(message) {
+            const div = document.createElement('div');
+            div.className = 'error-message';
+            div.textContent = message;
+            div.style.position = 'fixed';
+            div.style.top = '20px';
+            div.style.left = '50%';
+            div.style.transform = 'translateX(-50%)';
+            div.style.zIndex = '3000';
+            document.body.appendChild(div);
+            div.style.display = 'block';
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const div = document.createElement('div');
+            div.className = 'success-message';
+            div.textContent = message;
+            div.style.position = 'fixed';
+            div.style.top = '20px';
+            div.style.left = '50%';
+            div.style.transform = 'translateX(-50%)';
+            div.style.zIndex = '3000';
+            document.body.appendChild(div);
+            div.style.display = 'block';
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        document.getElementById('userForm').addEventListener('submit', saveUser);
+        
+        document.getElementById('userModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('userModal')) hideModal();
+        });
+        
+        document.getElementById('confirmModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('confirmModal')) hideConfirmModal();
+        });
+        
+        document.getElementById('batchDeleteBtn').addEventListener('click', () => {
+            if (selectedIds.length > 0) {
+                document.getElementById('confirmModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideModal();
+                hideConfirmModal();
+            }
+        });
+        
+        loadUsers();
+    </script>
+</body>
+</html>

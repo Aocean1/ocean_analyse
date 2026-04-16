@@ -30,6 +30,11 @@
     </style>
 </head>
 <body>
+    <script>
+        if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+            window.location.href = '/login';
+        }
+    </script>
     <div class="header">
         <h1>🔬 数据分析</h1>
         <div class="nav">
