@@ -33,6 +33,7 @@ D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\Oc
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\HoleAnalysis.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\GrainSizeAnalysisController.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\config\SecurityConfig.java
+D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\config\CustomAccessDeniedHandler.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\GrainSizeAnalysis.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\repository\UserInfoRepository.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\HoleAnalysisController.java

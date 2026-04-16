@@ -191,40 +191,7 @@
             font-size: 12px;
         }
         
-        .role-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
         
-        .role-option {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 13px;
-        }
-        
-        .role-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .role-option.selected {
-            background: rgba(52, 152, 219, 0.3);
-            border-color: #3498db;
-        }
-        
-        .role-option.admin { border-color: #e74c3c; }
-        .role-option.teacher { border-color: #f39c12; }
-        .role-option.user { border-color: #2ecc71; }
-        
-        .role-option.admin.selected { background: rgba(231, 76, 60, 0.3); }
-        .role-option.teacher.selected { background: rgba(243, 156, 18, 0.3); }
-        .role-option.user.selected { background: rgba(46, 204, 113, 0.3); }
         
         .loading-spinner {
             display: inline-block;
@@ -271,15 +238,6 @@
                 <div class="input-error" id="passwordError"></div>
             </div>
             
-            <div>
-                <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 8px; font-size: 14px;">选择角色</label>
-                <div class="role-selector">
-                    <div class="role-option admin" data-role="3" onclick="selectRole(this)">管理员</div>
-                    <div class="role-option teacher" data-role="2" onclick="selectRole(this)">教师</div>
-                    <div class="role-option user selected" data-role="1" onclick="selectRole(this)">普通用户</div>
-                </div>
-            </div>
-            
             <button type="submit" class="btn btn-primary" id="loginBtn">
                 <span class="btn-text">
                     <span>登 录</span>
@@ -324,15 +282,6 @@
                     <div class="input-error" id="regConfirmError"></div>
                 </div>
                 
-                <div>
-                    <label style="display: block; color: rgba(255,255,255,0.8); margin-bottom: 8px; font-size: 14px;">选择角色</label>
-                    <div class="role-selector">
-                        <div class="role-option admin" data-role="3" onclick="selectRegisterRole(this)">管理员</div>
-                        <div class="role-option teacher" data-role="2" onclick="selectRegisterRole(this)">教师</div>
-                        <div class="role-option user selected" data-role="1" onclick="selectRegisterRole(this)">普通用户</div>
-                    </div>
-                </div>
-                
                 <button type="submit" class="btn btn-primary" id="registerBtn">
                     <span class="btn-text">
                         <span>注 册</span>
@@ -345,21 +294,6 @@
     </div>
 
     <script>
-        let selectedRole = 1;
-        let selectedRegisterRole = 1;
-        
-        function selectRole(element) {
-            document.querySelectorAll('#loginForm .role-option').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            selectedRole = parseInt(element.dataset.role);
-        }
-        
-        function selectRegisterRole(element) {
-            document.querySelectorAll('#registerForm .role-option').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            selectedRegisterRole = parseInt(element.dataset.role);
-        }
-        
         function showRegister() {
             document.getElementById('registerModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -374,9 +308,6 @@
             document.getElementById('regUsername').value = '';
             document.getElementById('regPassword').value = '';
             document.getElementById('regConfirmPassword').value = '';
-            document.querySelectorAll('#registerForm .role-option').forEach(el => el.classList.remove('selected'));
-            document.querySelector('#registerForm .role-option.user').classList.add('selected');
-            selectedRegisterRole = 1;
         }
         
         function showError(elementId, message) {
@@ -511,7 +442,7 @@
                 const response = await fetch('/api/users/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, userRole: selectedRegisterRole })
+                    body: JSON.stringify({ username, password })
                 });
                 
                 const data = await response.json();

@@ -496,6 +496,7 @@
     </style>
 </head>
 <body>
+    <script src="/js/permission.js"></script>
     <div class="particles" id="particles"></div>
     
     <div class="header">
@@ -809,24 +810,26 @@
         }
         
         function updatePermissions(role) {
+            Permission.currentRole = role;
+            
             const features = {
-                core: [1, 2, 3],
-                hole: [1, 2, 3],
-                grain: [1, 2, 3],
-                fracture: [1, 2, 3],
-                report: [1, 2, 3],
-                user: [3]
+                core: { roles: [1, 2, 3], name: '岩心管理' },
+                hole: { roles: [1, 2, 3], name: '孔洞分析' },
+                grain: { roles: [1, 2, 3], name: '粒度分析' },
+                fracture: { roles: [1, 2, 3], name: '裂缝分析' },
+                report: { roles: [1, 2, 3], name: '分析报告' },
+                user: { roles: [3], name: '用户管理' }
             };
             
             const navItems = {
-                navCoreSamples: [1, 2, 3],
-                navAnalysis: [1, 2, 3],
-                navReports: [1, 2, 3],
-                navUsers: [3]
+                navCoreSamples: { roles: [1, 2, 3], name: '岩心管理' },
+                navAnalysis: { roles: [1, 2, 3], name: '数据分析' },
+                navReports: { roles: [1, 2, 3], name: '分析报告' },
+                navUsers: { roles: [3], name: '用户管理' }
             };
             
             Object.keys(features).forEach(key => {
-                const hasAccess = role > 0 && features[key].includes(role);
+                const hasAccess = role > 0 && features[key].roles.includes(role);
                 const link = document.getElementById('feature' + key.charAt(0).toUpperCase() + key.slice(1));
                 const card = link ? link.querySelector('.feature-card') : null;
                 const lock = document.getElementById('lock' + key.charAt(0).toUpperCase() + key.slice(1));
@@ -836,10 +839,15 @@
                         card.classList.remove('disabled');
                         link.classList.remove('disabled');
                         if (lock) lock.style.display = 'none';
+                        link.onclick = null;
                     } else {
                         card.classList.add('disabled');
                         link.classList.add('disabled');
                         if (lock) lock.style.display = 'block';
+                        link.onclick = function(e) {
+                            e.preventDefault();
+                            Permission.showPermissionDenied(features[key].name);
+                        };
                     }
                 }
             });
@@ -847,13 +855,18 @@
             Object.keys(navItems).forEach(key => {
                 const navItem = document.getElementById(key);
                 if (navItem) {
-                    const hasAccess = role > 0 && navItems[key].includes(role);
+                    const hasAccess = role > 0 && navItems[key].roles.includes(role);
                     if (hasAccess) {
                         navItem.classList.remove('disabled');
                         navItem.classList.add('has-access');
+                        navItem.onclick = null;
                     } else {
                         navItem.classList.add('disabled');
                         navItem.classList.remove('has-access');
+                        navItem.onclick = function(e) {
+                            e.preventDefault();
+                            Permission.showPermissionDenied(navItems[key].name);
+                        };
                     }
                 }
             });

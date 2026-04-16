@@ -60,10 +60,14 @@
     </style>
 </head>
 <body>
+    <script src="/js/permission.js"></script>
     <script>
         if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
             window.location.href = '/login';
         }
+        
+        // 初始化权限控制
+        Permission.init();
     </script>
     <div class="header">
         <h1>🌊 岩心管理</h1>
@@ -272,6 +276,10 @@
         }
 
         function openModal() {
+            if (!Permission.hasPermission('core_add')) {
+                Permission.showPermissionDenied('添加岩心');
+                return;
+            }
             document.getElementById('modalTitle').textContent = '添加岩心';
             document.getElementById('coreSampleForm').reset();
             document.getElementById('formId').value = '';
@@ -359,6 +367,10 @@
         }
 
         function reanalyzeCurrentImage() {
+            if (!Permission.hasPermission('analysis_reanalyze')) {
+                Permission.showPermissionDenied('重新分析');
+                return;
+            }
             if (!currentViewingImageId) {
                 alert('请先选择一张图片查看');
                 return;
@@ -477,6 +489,10 @@
 
         function analyzeImages() {
             try {
+                if (!Permission.hasPermission('analysis_upload')) {
+                    Permission.showPermissionDenied('图片分析上传');
+                    return;
+                }
                 if (uploadedImages.length === 0) {
                     alert('请先上传图片');
                     return;
@@ -595,6 +611,10 @@
         }
 
         function editCoreSample(id) {
+            if (!Permission.hasPermission('core_edit')) {
+                Permission.showPermissionDenied('编辑岩心');
+                return;
+            }
             fetch(`${API_URL}/${id}`)
                 .then(res => res.json())
                 .then(data => {
@@ -616,6 +636,10 @@
         }
 
         function deleteCoreSample(id) {
+            if (!Permission.hasPermission('core_delete')) {
+                Permission.showPermissionDenied('删除岩心');
+                return;
+            }
             if (confirm('确定要删除该岩心吗？')) {
                 fetch(`${API_URL}/${id}`, { method: 'DELETE' })
                     .then(() => loadCoreSamples());

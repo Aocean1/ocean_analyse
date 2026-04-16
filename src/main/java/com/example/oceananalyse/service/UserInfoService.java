@@ -22,9 +22,8 @@ public class UserInfoService {
             throw new RuntimeException("用户名已存在");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        if (user.getUserRole() == null) {
-            user.setUserRole(UserInfo.ROLE_NORMAL);
-        }
+        // 强制新用户注册为普通用户，不允许注册为管理员或教师
+        user.setUserRole(UserInfo.ROLE_NORMAL);
         return userInfoRepository.save(user);
     }
 
