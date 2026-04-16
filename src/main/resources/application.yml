@@ -29,7 +29,16 @@ spring:
     livereload:
       enabled: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 logging:
   level:
     "[com.example.oceananalyse]": DEBUG
     "[org.hibernate.SQL]": DEBUG
+
+file:
+  upload-dir: ./uploads
+  base-url: /uploads

@@ -1,8 +1,10 @@
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\FractureAnalysisController.java
+D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\ImageAnalysisController.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\service\HoleAnalysisService.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\repository\GrainSizeAnalysisRepository.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\repository\CoreImageRepository.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\service\FractureAnalysisService.java
+D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\service\FileStorageService.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\service\UserInfoService.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\config\WebConfig.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\repository\AnalysisResultRepository.java
@@ -18,11 +20,14 @@ D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\se
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\FractureAnalysis.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\AnalysisReport.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\UserInfo.java
+D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\service\ImageAnalysisService.java
+D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\config\WebMvcConfig.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\PageController.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\repository\CoreSampleRepository.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\CoreSampleController.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\CoreSample.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\AnalysisReportController.java
+D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\controller\FileUploadController.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\CoreImage.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\OceanAnalyseApplication.java
 D:\ocean_analyse_project\ocean_analyse\src\main\java\com\example\oceananalyse\entity\HoleAnalysis.java
