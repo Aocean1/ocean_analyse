@@ -93,10 +93,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/api/reports/core/**").permitAll()
             .antMatchers("/api/reports/generate/**").permitAll()
             
-            // ========== 用户管理 - 仅管理员可访问 ==========
-            .antMatchers("/users").hasRole("ADMIN")
-            .antMatchers("/api/users").hasRole("ADMIN")
-            .antMatchers("/api/users/**").hasRole("ADMIN")
+            // ========== 用户管理 - 公开访问（前端控制权限） ==========
+            .antMatchers("/users").permitAll()
+            .antMatchers("/api/users/**").permitAll()
             
             // 其他所有请求公开访问
             .anyRequest().permitAll()

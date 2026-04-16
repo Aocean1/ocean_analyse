@@ -629,13 +629,13 @@
                         <td class="permission-name">岩心数据录入</td>
                         <td class="permission-yes">✓</td>
                         <td class="permission-yes">✓</td>
-                        <td class="permission-no">-</td>
+                        <td class="permission-yes">✓</td>
                     </tr>
                     <tr>
                         <td class="permission-name">岩心数据修改</td>
                         <td class="permission-yes">✓</td>
                         <td class="permission-yes">✓</td>
-                        <td class="permission-no">-</td>
+                        <td class="permission-yes">✓</td>
                     </tr>
                     <tr>
                         <td class="permission-name">岩心数据删除</td>
@@ -810,7 +810,9 @@
         }
         
         function updatePermissions(role) {
-            Permission.currentRole = role;
+            // 确保角色是整数类型，避免类型不匹配导致权限判断失败
+            const roleInt = parseInt(role, 10) || 0;
+            Permission.currentRole = roleInt;
             
             const features = {
                 core: { roles: [1, 2, 3], name: '岩心管理' },
@@ -829,7 +831,7 @@
             };
             
             Object.keys(features).forEach(key => {
-                const hasAccess = role > 0 && features[key].roles.includes(role);
+                const hasAccess = roleInt > 0 && features[key].roles.includes(roleInt);
                 const link = document.getElementById('feature' + key.charAt(0).toUpperCase() + key.slice(1));
                 const card = link ? link.querySelector('.feature-card') : null;
                 const lock = document.getElementById('lock' + key.charAt(0).toUpperCase() + key.slice(1));
@@ -855,7 +857,7 @@
             Object.keys(navItems).forEach(key => {
                 const navItem = document.getElementById(key);
                 if (navItem) {
-                    const hasAccess = role > 0 && navItems[key].roles.includes(role);
+                    const hasAccess = roleInt > 0 && navItems[key].roles.includes(roleInt);
                     if (hasAccess) {
                         navItem.classList.remove('disabled');
                         navItem.classList.add('has-access');

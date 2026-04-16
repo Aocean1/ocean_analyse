@@ -77,8 +77,47 @@ public class UserInfoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserInfo>> getAllUsers() {
-        return ResponseEntity.ok(userInfoService.getAllUsers());
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Integer role) {
+        List<UserInfo> users = userInfoService.getAllUsers();
+        
+        // 搜索过滤
+        if (username != null && !username.isEmpty()) {
+            users = users.stream()
+                    .filter(u -> u.getUsername().contains(username))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        if (role != null) {
+            users = users.stream()
+                    .filter(u -> role.equals(u.getUserRole()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        
+        // 分页处理（前端从1开始）
+        int totalElements = users.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        
+        // 转换为从0开始的索引
+        int start = (page - 1) * size;
+        int end = Math.min(start + size, totalElements);
+        
+        if (start >= totalElements) {
+            users = new java.util.ArrayList<>();
+        } else {
+            users = users.subList(start, end);
+        }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("content", users);
+        result.put("totalElements", totalElements);
+        result.put("totalPages", totalPages);
+        result.put("number", page);
+        result.put("size", size);
+        
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")

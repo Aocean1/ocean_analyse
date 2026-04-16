@@ -15,7 +15,7 @@ public class UserInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Long id;
+    private Long userId;
 
     @Column(name = "username", length = 20, unique = true, nullable = false)
     private String username;
@@ -25,6 +25,9 @@ public class UserInfo {
 
     @Column(name = "user_role")
     private Integer userRole;
+
+    @Column(name = "created_at")
+    private java.util.Date createdAt;
 
     public static final int ROLE_NORMAL = 1;
     public static final int ROLE_TEACHER = 2;

@@ -631,7 +631,7 @@
                     <td>${user.userId}</td>
                     <td>${user.username}</td>
                     <td><span class="role-badge ${getRoleClass(user.userRole)}">${getRoleName(user.userRole)}</span></td>
-                    <td>${formatDateTime(user.createTime)}</td>
+                    <td>${formatDateTime(user.createdAt)}</td>
                     <td>
                         <div class="action-buttons">
                             <button class="action-btn edit" onclick="showEditModal(${user.userId})">编辑</button>
